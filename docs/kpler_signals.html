@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kpler freight APIs — what we hit and why</title>
+  <style>
+    :root {
+      --ink: #1a2332;
+      --muted: #5c6b7a;
+      --line: #d5dce3;
+      --paper: #f7f5f0;
+      --card: #fff;
+      --accent: #1f4e79;
+      --hot: #9b2c2c;
+      --ok: #1d6a45;
+      --wash: #e8eef4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 16px/1.55 "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 2.2rem 1.5rem 1.8rem;
+    }
+    header .wrap, main { max-width: 860px; margin: 0 auto; }
+    header h1 { margin: 0 0 0.4rem; font-size: 1.75rem; font-weight: 650; }
+    header p { margin: 0; opacity: 0.9; max-width: 42rem; }
+    nav {
+      display: flex; flex-wrap: wrap; gap: 0.5rem 1rem;
+      padding: 0.75rem 1.5rem;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      position: sticky; top: 0; z-index: 2;
+    }
+    nav a { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+    nav a:hover { text-decoration: underline; }
+    main { padding: 1.75rem 1.5rem 4rem; }
+    h2 { margin: 2.2rem 0 0.7rem; font-size: 1.25rem; color: var(--accent); }
+    h3 { margin: 1.4rem 0 0.5rem; font-size: 1.05rem; }
+    p, li { color: var(--ink); }
+    .lede { font-size: 1.05rem; color: var(--muted); }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 0.9rem;
+      background: var(--card); margin: 0.8rem 0 1.2rem;
+    }
+    th, td { border: 1px solid var(--line); padding: 0.45rem 0.6rem; text-align: left; vertical-align: top; }
+    th { background: var(--wash); font-weight: 600; }
+    .hot { color: var(--hot); font-weight: 600; }
+    .ok { color: var(--ok); font-weight: 600; }
+    .callout {
+      background: var(--card);
+      border-left: 4px solid var(--accent);
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      padding: 0.9rem 1rem;
+      margin: 0.8rem 0 1.1rem;
+    }
+    .card h3 { margin-top: 0; }
+    .tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+      padding: 0.12rem 0.4rem;
+      border-radius: 3px;
+      margin-right: 0.35rem;
+    }
+    .tag.v1 { background: var(--wash); color: var(--accent); }
+    .tag.v2 { background: #e8f4ee; color: var(--ok); }
+    .tag.no { background: #f8e8e8; color: var(--hot); }
+    code { font-family: ui-monospace, Consolas, monospace; font-size: 0.88em; background: var(--wash); padding: 0.05em 0.3em; }
+    footer { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 2.5rem; color: var(--muted); font-size: 0.85rem; }
+    @media print {
+      nav { display: none; }
+      header { background: #fff; color: #000; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Kpler APIs — what we hit and why</h1>
+      <p>Team note for an oil desk new to tanker freight. What each series is, the crude analogy, the economic signal, and how to defend it. Companion to the <a href="freight_instruments.html" style="color:#cfe0f0">instrument primer</a> (Baltic / DFN / TDL).</p>
+    </div>
+  </header>
+  <nav>
+    <a href="#story">Story</a>
+    <a href="#doors">Two doors</a>
+    <a href="#fixtures">Fixtures</a>
+    <a href="#tonnage">Tonnage</a>
+    <a href="#util">Util / ballast</a>
+    <a href="#cong">Congestion</a>
+    <a href="#tm">Ton-miles</a>
+    <a href="#trades">Trades</a>
+    <a href="#fleet">Fleet v2</a>
+    <a href="#no">Not entitled</a>
+    <a href="#map">Build map</a>
+    <a href="#defend">Phrases</a>
+  </nav>
+  <main>
+    <p class="lede">Kpler is not Baltic TD3C and not ICE TDL. Those are the <em>price</em>. Kpler is the <em>physical tape</em> — ships that can arrive, cargoes that need lifting, whether the fleet is working or stuck. Pitch: we already have the futures curve; this is tightness and positioning so we can say whether paper is rich or cheap versus the list.</p>
+
+    <h2 id="story">1. The story in one slide</h2>
+    <p>A tanker rate is the price of a <strong>scarce ship-week</strong> on a route.</p>
+    <ul>
+      <li><strong>Demand:</strong> cargoes that need a ship in a loading window (decades: 1–10, 11–20, 21–30).</li>
+      <li><strong>Supply:</strong> ships that can physically be there in time (empty + ETA + speed).</li>
+      <li><strong>Balance:</strong> cargoes &gt; reachable ships → WS and $/t up, FFAs bid, some crude arbs die. Reverse → rates fall.</li>
+    </ul>
+    <p>Same logic as crude: inventories and flows are the <em>why</em>; Dated / Dubai / ICE are the <em>price</em>. Freight demand is consumed as <strong>ton-miles</strong> (volume × distance), not barrels exported.</p>
+    <div class="callout">Usual chain: arb opens → cargoes get fixed → the regional list drains → owners gain pricing power → ballast comes in from other basins → the list rebuilds → rates normalise. Kpler is how we watch that chain without waiting for tomorrow’s Baltic.</div>
+
+    <h2 id="doors">2. Two doors (do not mix auth)</h2>
+    <table>
+      <thead><tr><th>Door</th><th>Auth</th><th>What we actually have (Oct 2026)</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Liquids <strong>v1</strong> (Python SDK)</td>
+          <td>email / password → <code>api.kpler.com/v1</code></td>
+          <td><span class="ok">Live.</span> Trades, fixtures, tonnage matcher, utilisation, ballast, congestion, ton-miles. This is the freight toolkit.</td>
+        </tr>
+        <tr>
+          <td>REST <strong>v2</strong></td>
+          <td><code>Authorization: Basic &lt;raw API_KEY&gt;</code> (not Base64, not Bearer)</td>
+          <td><span class="ok">Fleet development only.</span> Next destination, routes, Kpler arbitrage, voyage-legs = <span class="hot">403</span>.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Portal matrix: fixtures / congestion / ballast / freight metrics / vessel matcher = <strong>v1 only</strong>. Fleet development = <strong>v2</strong>. Technical map: <code>docs/kpler_api_map.md</code>.</p>
+
+    <h2 id="fixtures">3. Fixtures — the physical “print”</h2>
+    <div class="card">
+      <h3><span class="tag v1">v1</span> <code>Fixtures</code></h3>
+      <p><strong>You get:</strong> reported charters — vessel, laycan, origin/dest, status (on-subs → fully fixed / failed), Kpler <code>rateValue</code> in <strong>$</strong>.</p>
+      <p><strong>Question:</strong> what got done, at what number, for which window?</p>
+      <p><strong>Signal:</strong> more fixtures into a tight decade, or rates above the last Baltic, is spot firming <em>before</em> (or instead of) the index. Failed/cancelled is demand that did <em>not</em> clear — often a warning, not strength.</p>
+      <p><strong>Crude analogy:</strong> a <strong>window trade</strong>. Baltic is the assessed average; fixtures are the deals.</p>
+      <p><strong>Economics:</strong> ICE TDL averages Baltic <em>index days</em> in $/t, not Kpler’s dollar print. Never say “Kpler rate = TD3C.” Say “third print for colour and counts; convert to $/t; compare to ICE.”</p>
+      <p><strong>In the build:</strong> tool B (cargo demand), daily report. Clarksons emails are the same idea, broker-shaped; Kpler is queryable history.</p>
+    </div>
+
+    <h2 id="tonnage">4. Tonnage supply — who can make the window</h2>
+    <div class="card">
+      <h3><span class="tag v1">v1</span> <code>TonnageSupplySeries</code> + <code>TonnageSupplyVessels</code></h3>
+      <p><strong>You get:</strong> daily count (or dwt) of ships that can reach a <em>zone</em> in N days at a chosen speed. Vessel list is the names — max <strong>6-day</strong> slice. Series has history (we pulled 2024).</p>
+      <p><strong>Question:</strong> how many VLCCs can be in MEG / Houston / China by this decade?</p>
+      <p><strong>Signal:</strong> count down vs a 90-day z-score → effective supply tight → spot and near FFAs should bid, all else equal. Count up → rates should ease. Speed (11 vs 13 kn) is a scenario, like shocking a crack for runs.</p>
+      <p><strong>Crude analogy:</strong> not “global inventories” — <strong>prompt available</strong> crude in a region. A VLCC in the USG is useless for TD3C this decade.</p>
+      <p><strong>Economics:</strong> this is <strong>optionality of arrival</strong>. FFA traders’ “ships per cargo” in MEG is this idea. World fleet size is a different (slower) series.</p>
+      <p><strong>In the build:</strong> core of tool A (tonnage nowcast). Backtests must <strong>snapshot</strong> daily or AIS revisions leak the future.</p>
+    </div>
+
+    <h2 id="util">5. Utilisation and ballast — laden vs empty</h2>
+    <div class="card">
+      <h3><span class="tag v1">v1</span> <code>FleetUtilizationSeries</code> · <code>BallastCapacitySeries</code></h3>
+      <p><strong>You get:</strong> <code>FleetUtilizationSeries</code> = loaded vs ballast vs maintenance ship <em>counts</em>. <code>BallastCapacitySeries</code> = capacity/dwt/count aggregated from <em>ballast capacity port calls</em> (SDK example metric is Capacity in tonnes) — not the same as util Ballast count.</p>
+      <p><strong>Question:</strong> is the fleet working or hunting?</p>
+      <p><strong>Signal:</strong> high ballast into a load region = ships looking for cargo = <span class="hot">bearish</span> local rates. High laden / low ballast = already committed = <span class="ok">bullish</span> prompt. Yard/maintenance = supply off.</p>
+      <p><strong>Crude analogy:</strong> refinery utilisation. High runs support cracks; idle units compress them. Ballast is <strong>unemployed ship-weeks</strong>.</p>
+      <p><strong>Economics:</strong> charterers pay to reposition empty ships. For MEG–China VLCC, ballast in the Indian Ocean / AG is the spare inventory of the route.</p>
+      <p><strong>In the build:</strong> tool E. Pair with the matcher: matcher = <em>can they arrive</em>; ballast = <em>are they empty and looking</em>.</p>
+    </div>
+
+    <h2 id="cong">6. Congestion — time destroyed at discharge</h2>
+    <div class="card">
+      <h3><span class="tag v1">v1</span> <code>CongestionSeries</code></h3>
+      <p><strong>You get:</strong> ships (or days) waiting before berth, e.g. China VLCCs.</p>
+      <p><strong>Question:</strong> are ships stuck, so they miss the <em>next</em> load window?</p>
+      <p><strong>Signal:</strong> queues up → effective supply <em>down</em> on the next load even if “global fleet” looks large. Can bid MEG rates while nameplate capacity is unchanged. Floating storage is a cousin (laden, not working).</p>
+      <p><strong>Crude analogy:</strong> a refinery outage: nameplate unchanged, <em>available</em> capacity down.</p>
+      <p><strong>Economics:</strong> congestion is a tax on fleet productivity. Ton-miles can stay high while ships available for the next decade fall.</p>
+      <p><strong>In the build:</strong> tool E. Do not treat waiting as demand.</p>
+    </div>
+
+    <h2 id="tm">7. Ton-miles — demand as volume × distance</h2>
+    <div class="card">
+      <h3><span class="tag v1">v1</span> <code>FreightMetricsSeries</code></h3>
+      <p><strong>You get:</strong> ton-miles, ton-days, average speed/distance. Keep <code>with_freight_view=True</code> so we do not silently drop unsubscribed cargo.</p>
+      <p><strong>Question:</strong> are barrels moving farther, or just more barrels?</p>
+      <p><strong>Signal:</strong> ton-miles up with volumes flat = longer-haul (WAF / USG / Brazil → China). That uses more ship-weeks per barrel → structural bid to VLCC. Speed up = fleet working harder (tightness <em>or</em> catching a window).</p>
+      <p><strong>Crude analogy:</strong> product demand vs miles to the consumer. Atlantic barrels to Asia are why TD15 / TD22 exist next to TD3C.</p>
+      <p><strong>Economics:</strong> freight demand is not “exports.” It is tonne-miles. Use this for <strong>regime</strong> (Atlantic arb open), not a one-week scalp.</p>
+      <p><strong>In the build:</strong> tool F. Blunt until voyage-legs (per corridor) is entitled — that call is still 403.</p>
+    </div>
+
+    <h2 id="trades">8. Trades (and snapshot) — the cargo, not the hire</h2>
+    <div class="card">
+      <h3><span class="tag v1">v1</span> <code>Trades</code> · <code>TradesSnapshot</code></h3>
+      <p><strong>You get:</strong> cargo legs (origin, dest, grade, vessel). Snapshot = that tape <strong>as of a past date</strong> (PIT confirmed on this account).</p>
+      <p><strong>Question:</strong> what is actually loading/discharging, not only what was reported as a fixture?</p>
+      <p><strong>Signal:</strong> fixture without a trade = on-subs / rumour. Trade without a fixture = owner program / CoA / restricted fleet. Snapshot stops Kpler’s later destination revisions from rewriting a backtest.</p>
+      <p><strong>Crude analogy:</strong> cargoes in a balance vs deals in the window. Flow is oil; fixtures are ship hire. You need both.</p>
+      <p><strong>In the build:</strong> tools B and G (arb opens → fixtures). Same stack <code>vessel_crossing</code> already uses.</p>
+    </div>
+
+    <h2 id="fleet">9. Fleet development — the year story (v2 key)</h2>
+    <div class="card">
+      <h3><span class="tag v2">v2</span> <code>/fleet-development/series</code> · <code>/summary</code></h3>
+      <p><strong>You get:</strong> available (in service), deliveries (newbuilds), orders, removals (scrap/loss). Summary = this period vs previous vs last year. Date limits from 2017, ~5 years forward.</p>
+      <p><strong>Question:</strong> is the VLCC fleet growing or shrinking over months and years?</p>
+      <p><strong>Signal:</strong> deliveries ≫ scrap → more ships in 6–24 months → bearish <em>deferred</em> FFAs, not necessarily this week’s TD3C.</p>
+      <p><strong>Crude analogy:</strong> global CDU additions. Prompt freight is geography + decades; this is nameplate.</p>
+      <p><strong>Economics:</strong> do not put fleet size in the daily spot nowcast. Use it for “why the 2027 strip is heavy.”</p>
+      <p><strong>In the build:</strong> structural slide / back-month context. This is what the v2 API key actually buys today.</p>
+    </div>
+
+    <h2 id="no">10. What we are not hitting — say it out loud</h2>
+    <table>
+      <thead><tr><th>API</th><th>Would add</th><th>Now</th><th>Line to the desk</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="tag no">403</span> Next destination</td>
+          <td>AIS or schedule next port, Kpler ETA, remaining miles, canals</td>
+          <td>Not on this key</td>
+          <td>We infer destination from matcher + trades, not MarineTraffic next-port.</td>
+        </tr>
+        <tr>
+          <td><span class="tag no">403</span> Routes</td>
+          <td>NM, Suez vs Cape, ECA/HRA, geometry</td>
+          <td>Not on this key</td>
+          <td>No routing engine; Worldscale flats still TBD.</td>
+        </tr>
+        <tr>
+          <td><span class="tag no">403</span> Arbitrage</td>
+          <td>Kpler’s landed-value arb (their Platts + freight cookbook)</td>
+          <td>Not on this key</td>
+          <td>We build arbs from <em>our</em> Platts + ICE $/t, not Kpler’s black box. That’s Sparta-class.</td>
+        </tr>
+        <tr>
+          <td><span class="tag no">403</span> Voyage legs</td>
+          <td>Per-leg ton-miles, ballast vs laden, from/to zone</td>
+          <td>Needs <code>freight:voyages:legs:read</code></td>
+          <td>Ton-miles stay aggregated until they grant legs.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 id="map">11. Desk questions → series → paper</h2>
+    <table>
+      <thead><tr><th>Someone asks</th><th>You cite</th><th>You compare to</th></tr></thead>
+      <tbody>
+        <tr><td>Is MEG VLCC tight this decade?</td><td>Tonnage supply + ballast + fixtures into AG</td><td>TDL / DFN</td></tr>
+        <tr><td>Is China eating the fleet?</td><td>Congestion + laden utilisation</td><td>TD3C vs TD15</td></tr>
+        <tr><td>Is the Atlantic pulling ships west?</td><td>Trades/fixtures USG–WAF→China, ton-miles</td><td>TD22 / TD15 vs TD3C spread</td></tr>
+        <tr><td>Is the FFA rich?</td><td>Physical nowcast vs ICE curve</td><td>Tool D (basis / rest-of-month)</td></tr>
+        <tr><td>Will the arb generate cargoes?</td><td>Platts legs + ICE freight; Kpler fixtures as the <em>result</em></td><td>Tool G</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Baltic / ICE</strong> = the price you P&amp;L. <strong>Kpler</strong> = whether that price is consistent with ships and cargoes. <strong>Platts</strong> tanker and bunkers = another assessment plus bunker cost in TCE.</p>
+
+    <h2 id="defend">12. Phrases that survive a challenge</h2>
+    <ol>
+      <li>Kpler fixture <code>$</code> is not Baltic WS and not ICE $/t; we convert and compare.</li>
+      <li>Tonnage supply is <em>reachable</em> ships, not the world fleet.</li>
+      <li>Ton-miles are demand; ballast is spare supply; congestion destroys supply.</li>
+      <li>Fleet development is a <strong>year</strong> story; the matcher is a <strong>week</strong> story.</li>
+      <li>We snapshot. Live Kpler revises destinations; that is why <code>TradesSnapshot</code> exists.</li>
+      <li>The v2 key is fleet development only; next-port, routing, and Kpler arb are not entitled.</li>
+    </ol>
+  </main>
+  <footer>
+    Internal desk note for freight_dashboard. Entitlements as of 6 Oct 2026. See also
+    <a href="freight_instruments.html">instrument primer</a>,
+    <code>docs/kpler_api_map.md</code>, <code>docs/ice_ffa_map.md</code>, <code>docs/platts_series.md</code>.
+  </footer>
+</body>
+</html>

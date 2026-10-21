@@ -1,0 +1,4 @@
+-- Phase 0 step 6: fundamentals + desk tools (metadata first).
+-- Runner: run_step6_fundamentals.py
+-- Goal: tables that map to load-region export volumes / runs / inventories,
+--       plus IIR outages; Hormuz/dark-fleet live outside Snowflake today.

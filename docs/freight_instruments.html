@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tanker freight instruments — desk primer</title>
+  <style>
+    :root {
+      --ink: #1a2332;
+      --muted: #5c6b7a;
+      --line: #d5dce3;
+      --paper: #f7f5f0;
+      --card: #fff;
+      --accent: #1f4e79;
+      --hot: #9b2c2c;
+      --ok: #1d6a45;
+      --wash: #e8eef4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 16px/1.55 "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 2.2rem 1.5rem 1.8rem;
+    }
+    header .wrap, main { max-width: 820px; margin: 0 auto; }
+    header h1 { margin: 0 0 0.4rem; font-size: 1.75rem; font-weight: 650; }
+    header p { margin: 0; opacity: 0.9; max-width: 40rem; }
+    nav {
+      display: flex; flex-wrap: wrap; gap: 0.5rem 1rem;
+      padding: 0.75rem 1.5rem;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      position: sticky; top: 0; z-index: 2;
+    }
+    nav a { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+    nav a:hover { text-decoration: underline; }
+    main { padding: 1.75rem 1.5rem 4rem; }
+    h2 { margin: 2.2rem 0 0.7rem; font-size: 1.25rem; color: var(--accent); }
+    h3 { margin: 1.4rem 0 0.5rem; font-size: 1.05rem; }
+    p, li { color: var(--ink); }
+    .lede { font-size: 1.05rem; color: var(--muted); }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 0.92rem;
+      background: var(--card); margin: 0.8rem 0 1.2rem;
+    }
+    th, td { border: 1px solid var(--line); padding: 0.45rem 0.6rem; text-align: left; vertical-align: top; }
+    th { background: var(--wash); font-weight: 600; }
+    .num { font-variant-numeric: tabular-nums; text-align: right; }
+    .hot { color: var(--hot); font-weight: 600; }
+    .ok { color: var(--ok); font-weight: 600; }
+    .callout {
+      background: var(--card);
+      border-left: 4px solid var(--accent);
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+    }
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+      margin: 1rem 0;
+    }
+    .timeline div {
+      background: var(--card);
+      border: 1px solid var(--line);
+      padding: 0.7rem 0.8rem;
+      font-size: 0.9rem;
+    }
+    .timeline strong { display: block; color: var(--accent); margin-bottom: 0.25rem; }
+    code { font-family: ui-monospace, Consolas, monospace; font-size: 0.88em; background: var(--wash); padding: 0.05em 0.3em; }
+    footer { max-width: 820px; margin: 0 auto; padding: 0 1.5rem 2.5rem; color: var(--muted); font-size: 0.85rem; }
+    @media print {
+      nav { display: none; }
+      header { background: #fff; color: #000; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Tanker freight instruments</h1>
+      <p>A newcomer note for the oil desk: physical market, Baltic prints, ICE FFAs (monthly, balmo, daily mini), units, and worked examples. TD3C (MEG→China VLCC) is the running case. Simulated numbers unless labelled as a live snapshot.</p>
+    </div>
+  </header>
+  <nav>
+    <a href="#physical">Physical</a>
+    <a href="#four">Four prices</a>
+    <a href="#crude">vs crude</a>
+    <a href="#sim">Worked month</a>
+    <a href="#ltd">Last trading day</a>
+    <a href="#units">Units</a>
+    <a href="#ice">ICE listing</a>
+  </nav>
+  <main>
+    <p class="lede">If you already trade crude, the trap is mapping ICE Brent onto the wrong freight contract. Read the four-price picture first, then the toy October.</p>
+
+    <h2 id="physical">1. The physical market in one page</h2>
+    <p>Freight is the price that clears, in a load region and fixing window, ships that can arrive in time against cargoes that need lifting. Short-run supply is almost fixed. Demand is consumed as <strong>ship-days</strong> (ton-miles), not barrels. Rates are convex: quiet when the list is long, vertical when it empties.</p>
+    <p>Usual chain: arb opens → cargoes get fixed → the regional list drains → owners gain pricing power → ballast comes in from other regions → the list rebuilds → rates normalise.</p>
+    <table>
+      <thead><tr><th>Class</th><th>Typical cargo</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>VLCC</td><td>~2 mbbl crude</td><td>Long-haul dirty (TD3C, TD15, TD22)</td></tr>
+        <tr><td>Suezmax</td><td>~1 mbbl</td><td>WAF, CPC, Guyana</td></tr>
+        <tr><td>Aframax / LR2</td><td>~600–750 kbbl / 75–90 kt products</td><td>Dirty regional / clean LR2</td></tr>
+        <tr><td>MR</td><td>~37 kt products</td><td>Clean workhorse (TC2, TC14)</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Dirty</strong> = crude and fuel oil. <strong>Clean</strong> = products in coated tanks. A <strong>fixture</strong> is a concluded charter (ship, cargo, laycan, rate). Statuses you will see on lists: on subs, fully fixed, failed, hold, relet. Raw ship counts overstate supply — many names are already on subjects or held.</p>
+    <p>Voyage charter: owner pays fuel, rate in Worldscale, $/t or lumpsum. Time charter: daily hire, charterer pays fuel.</p>
+
+    <h2 id="four">2. Four TD3C numbers (do not mix them)</h2>
+    <p>TD3C is Baltic’s VLCC Ras Tanura → Ningbo (270 kt). Paper around it is listed on ICE as wet-freight futures, cash-settled in <strong>US dollars per metric tonne</strong>.</p>
+    <table>
+      <thead><tr><th>Name</th><th>ICE code</th><th>What it is</th><th>Strip you see</th></tr></thead>
+      <tbody>
+        <tr><td>Baltic <strong>print</strong></td><td>(not ICE)</td><td>That day’s official assessment. Usually quoted in <em>Worldscale</em>. This is the “window”.</td><td>One print per Baltic day</td></tr>
+        <tr><td>Daily <strong>mini</strong></td><td><code>DFN</code></td><td>A listed future on <em>one</em> index day. Lot = <strong>100 t</strong>.</td><td><code>Oct-05-26</code>, <code>Oct-06-26</code>, … (~130 business days)</td></tr>
+        <tr><td>Monthly FFA</td><td><code>TDL</code></td><td>Listed future on the <em>average of all Baltic days in the month</em>. Lot = <strong>1,000 t</strong>. This is the main paper people mean by “TD3C FFA”.</td><td><code>Oct26</code>, <code>Nov26</code>, …</td></tr>
+        <tr><td>Balmo</td><td><code>TDM</code></td><td>Average of the <em>days still left</em> in the current month (already-printed days are out).</td><td>Calendar dates</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <strong>Mini means lot size, not a different index.</strong> DFN and TDL both settle off Baltic TD3C in $/t. Mini = 100 t vs 1,000 t, like mini Brent vs full-size.
+    </div>
+    <p>There is no separate ICE “spot” feed in our Snowflake. Prompt DFN (the daily strip whose date equals the session) is the closest <em>$/t proxy</em> for that day’s print — it is still paper, not the Baltic tape.</p>
+    <p>DFN is a <strong>strip of one-day contracts</strong>. When Monday’s print is done and that contract’s last trading day has passed, <code>Oct-05-26</code> is finished. Tuesday you trade <code>Oct-06-26</code>. It is not one future that rolls forever.</p>
+
+    <h2 id="crude">3. If you already trade crude</h2>
+    <table>
+      <thead><tr><th>Crude (Dated complex)</th><th>TD3C freight</th></tr></thead>
+      <tbody>
+        <tr><td>Dated / window <strong>print</strong></td><td>Baltic TD3C <strong>print</strong></td></tr>
+        <tr><td>Dated <strong>monthly swap</strong> (average of window prints)</td><td><strong>TDL</strong> monthly FFA</td></tr>
+        <tr><td>Dated <strong>balmo</strong></td><td><strong>TDM</strong></td></tr>
+        <tr><td>ICE <strong>Brent</strong> (monthly listed future, different settlement)</td><td>There isn’t a second “Brent-style” monthly. <strong>TDL is the screen monthly</strong>, and it settles <em>like</em> the Dated swap.</td></tr>
+        <tr><td>Crude does not really list “Dated 5 October” as its own future</td><td><strong>DFN</strong> is exactly that: a listed future on <em>one day’s</em> Baltic</td></tr>
+      </tbody>
+    </table>
+    <p>The usual mistake is “DFN = ICE Brent, TDL = the swap”. Flip it: <strong>TDL is the monthly you trade as “the FFA”</strong>; DFN is a daily window future. TDL happens to cash-settle on the average of prints, so it also plays the swap’s role.</p>
+
+    <h2 id="sim">4. Worked example — a four-day October</h2>
+    <p>Toy month with four Baltic days. Everything in <strong>$/t</strong>. Market starts convinced every day will print <strong>200</strong>.</p>
+    <h3>Morning of day 1 (nothing printed)</h3>
+    <table>
+      <thead><tr><th>Instrument</th><th class="num">Price</th><th>Read</th></tr></thead>
+      <tbody>
+        <tr><td>Baltic</td><td class="num">—</td><td>No print yet</td></tr>
+        <tr><td>DFN days 1–4</td><td class="num">200</td><td>Each day’s future = expected print that day</td></tr>
+        <tr><td>TDL October</td><td class="num">200</td><td>(200+200+200+200) / 4</td></tr>
+      </tbody>
+    </table>
+    <h3>Day 1 prints hot: Baltic = <span class="hot">240</span></h3>
+    <p>DFN day 1 is paper on <em>today’s</em> window, so it trades into <span class="hot">240</span>.</p>
+    <p><strong>Case A — one-off spike.</strong> Days 2–4 still expected 200:</p>
+    <p><code>TDL = (240 + 200 + 200 + 200) / 4 = 210</code></p>
+    <p>You see print <span class="hot">240</span>, DFN today <span class="hot">240</span>, monthly only <strong>210</strong>. That is the same shape as a live 5 Oct 2026 snapshot: DFN prompt ~251 $/t vs TDL Oct-26 ~238 $/t.</p>
+    <p><strong>Case B — the spike sticks.</strong> Days 2–4 reprice to 230:</p>
+    <p><code>TDL = (240 + 230 + 230 + 230) / 4 = 232.5</code></p>
+    <p>Print and DFN today still 240. TDL moves more because the <em>other daily futures</em> (the rest of the window strip) repriced.</p>
+    <h3>After day 2 prints 220 (days 3–4 still 200)</h3>
+    <p><code>TDL = (240 + 220 + 200 + 200) / 4 = 215</code></p>
+    <table>
+      <thead><tr><th>Instrument</th><th class="num">Level</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>DFN day 1</td><td class="num">240</td><td>Done — that window is history</td></tr>
+        <tr><td>DFN day 2</td><td class="num">220</td><td>Today’s window</td></tr>
+        <tr><td>DFN days 3–4</td><td class="num">200</td><td>Still forward</td></tr>
+        <tr><td>TDL October</td><td class="num">215</td><td>Average of all four days, including those already printed</td></tr>
+        <tr><td>TDM balmo</td><td class="num">200</td><td>Only days 3–4: (200+200)/2. Does <em>not</em> keep the 240 and 220</td></tr>
+      </tbody>
+    </table>
+    <h3>Month end (days 3 and 4 print 200)</h3>
+    <p><code>Month average = (240 + 220 + 200 + 200) / 4 = 215</code></p>
+    <p>TDL expires at <strong>215</strong>. That is FFA settlement — the same idea as a Dated monthly swap fixing on the average of window prints.</p>
+    <div class="callout">
+      Baltic = the print. DFN today = paper on <em>that</em> print. TDL = paper on <em>all prints this month, averaged</em>. They only sit on top of each other if every remaining day is expected to look like today.
+    </div>
+    <h3>Implied rest of month (real TDL, any day)</h3>
+    <p>Once some Baltic days have printed, part of TDL is already known:</p>
+    <p><code>implied_rest = (TDL × N − sum of prints so far) / (N − n)</code></p>
+    <p>where <code>N</code> is index days in the month and <code>n</code> is days already published. Front-month TDL minus spot is mostly a view on those remaining days.</p>
+
+    <h2 id="ltd">5. “Last trades on the second business day after the nominal date”</h2>
+    <p>Each DFN strip has a <strong>nominal date</strong>: the Baltic index day it belongs to. ICE does <em>not</em> kill the contract at midnight on that date. Last trading day is the <strong>second business day after</strong> the nominal date. Final settlement is still that nominal day’s Baltic, in $/t.</p>
+    <p>Example: DFN <code>Oct-05-26</code>. 5 Oct 2026 was a Monday.</p>
+    <div class="timeline">
+      <div><strong>Mon 5 Oct</strong>Nominal date. Baltic publishes Monday’s TD3C. This is the print the contract is tied to.</div>
+      <div><strong>Tue 6 Oct</strong>1st business day after. You can still trade <code>Oct-05-26</code>.</div>
+      <div><strong>Wed 7 Oct</strong>2nd business day after = <em>last trading day</em>. After this close, the contract expires and cash-settles on <em>Monday’s</em> print — not Tuesday’s or Wednesday’s.</div>
+    </div>
+    <p>The extra sessions are a short window to trade around a print that is out or just coming out. They are not two extra index days.</p>
+    <p><strong>Friday nominal:</strong> Fri 9 Oct → skip the weekend → 1st BD Mon 12 Oct, last trade <strong>Tue 13 Oct</strong>. The contract is still “Friday’s Baltic”.</p>
+    <p>December is special: ICE stops the daily series on the 24th (or previous business day) rather than running through year-end.</p>
+    <p>TDL is the opposite calendar: last trading day is the <strong>last trading day of the contract month</strong> (December TDL also uses the 24th rule). Settlement = average of Baltic prints over that month’s index days.</p>
+
+    <h2 id="units">6. Units — Worldscale is not a dollar</h2>
+    <p><strong>Worldscale (WS)</strong> is a percentage of that route’s annual <strong>flat rate</strong> ($/t), reset 1 January.</p>
+    <p><code>usd_t = flat_rate × WS / 100</code></p>
+    <p>WS 100 in 2025 and WS 100 in 2026 are not the same dollars. For any history or curve that crosses 1 Jan, convert to $/t (or TCE) first. ICE tanker FFAs store and settle <strong>$/t</strong>, even when brokers still shout WS.</p>
+    <p>Rough sanity: a normal-year TD3C might sit WS 50–70 (~$1.5–2/bbl). Extreme 2026 prints (WS ~1,240) were a war-risk regime, not a “new normal” to calibrate models on.</p>
+    <p>Other quotes: some Baltic routes are <strong>lumpsum $</strong> (e.g. TD22) or TCE $/day. Never mix those in one series. <code>usd_bbl ≈ usd_t / 7.33</code> for crude.</p>
+    <p><strong>TCE</strong> (time-charter equivalent) = (gross freight − bunkers − port costs) / round-voyage days. Owners think in TCE; FFAs on these routes settle in $/t.</p>
+
+    <h2 id="ice">7. How ICE lists the paper</h2>
+    <ul>
+      <li>Canonical monthly for TD3C is <code>TDL</code>. Daily mini <code>DFN</code>, balmo <code>TDM</code>. Average-price <strong>options</strong> exist on TDL.</li>
+      <li>Snowflake <code>ICE.MFT.FUTURES</code> has monthlies only as <code>Oct26</code>-style strips — <strong>no Q or Cal contracts</strong>. Quarters and calendars are packs of those months (usually equal-weighted average of the three or twelve TDL months).</li>
+      <li>Each session can appear twice: <code>FILE_FLAG = Early</code> (settle and volume, OI empty) then <code>Final</code> (OI filled). Use Final for positioning; Early is fine for the same-day curve. That is the ICE file dump, not a freight concept.</li>
+      <li>Product codes were recoded around Dec 2024 on some clean/dirty routes (e.g. TC14 <code>WCN</code> → <code>WHK</code>). TD3C monthly stayed <code>TDL</code>.</li>
+    </ul>
+    <p>Other Baltic monthlies you will meet: TD20 <code>TDC</code> (name has no “FFA”), TD22 <code>WF2</code>, TC14 <code>WHK</code>, TC2 <code>WNS</code>. Same mechanics, different route. See <code>docs/ice_ffa_map.md</code> in this repo.</p>
+
+    <h2>8. What “the market” is pricing</h2>
+    <p>A steep TDL backwardation (front month far above the 12th month) means the screen thinks today’s crisis premium fades. A daily print far above TDL means either (a) today is a spike vs the rest of the month, or (b) the remaining days have not caught up yet — compute implied rest before telling a story.</p>
+    <p>Open interest lives on the monthly (<code>TDL</code>), not on the Baltic print. Falling OI with a still-steep curve is often paper getting out of a regime it does not want to own in the back, not “the physical list just got longer”.</p>
+  </main>
+  <footer>
+    Internal desk note for freight_dashboard. Simulated arithmetic in §4; 5 Oct 2026 figures are an illustration from ICE TDL/DFN, not a Baltic licence dump. Kpler physical tape: <a href="kpler_signals.html">kpler_signals.html</a>. For agent rules see AGENTS.md; for verified tables see docs/04_data_catalog.md.
+  </footer>
+</body>
+</html>

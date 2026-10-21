@@ -1,0 +1,22 @@
+---
+description: Freight units, FFA settlement and common pitfalls. Apply when modelling freight rates, FFAs, TCE or arb economics.
+globs: src/freight/**
+alwaysApply: false
+---
+# Freight domain pitfalls
+
+- **Worldscale (WS)** is a percentage of the route's annual flat rate ($/t).
+  `usd_t = flat_rate * ws / 100`. Flat rates reset every 1 January, so WS is not comparable
+  across years. Convert to $/t or TCE for any history or curve spanning a year end.
+- Some Baltic routes are quoted as **lumpsum** (e.g. TD22 in $), others in WS, and Baltic also
+  publishes **TCE** ($/day). Never mix units in one series.
+- **FFAs settle on the monthly average** of the Baltic daily assessment over the month's index days.
+  Mid-month, part of the settlement is already known:
+  `implied_rest = (ffa * N - sum(published)) / (N - n)`.
+- Tanker FFAs are commonly quoted in WS and settled in $/t; confirm each contract's spec
+  (unit, lot size, settlement) from the exchange data before computing P&L.
+- Freight per barrel: `usd_bbl = usd_t / bbl_per_t` (~7.33 crude, ~8.5 gasoline, ~7.45 diesel).
+- Supply counts must be **effective** supply: exclude ships on subs, held, restricted or
+  sanctioned, and ships failing typical vetting (age), where data allows.
+- Freight is convex in supply/demand: model rates in logs or with nonlinear terms.
+- 2026 contains a Hormuz war-risk regime; models fitted on 2022–25 will break without a regime or risk-premium term.

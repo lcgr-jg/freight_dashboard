@@ -1,0 +1,27 @@
+-- Phase 0 step 2 value probes (lean). Prefer running via run_value_search_lean.py.
+-- Platts tanker/bunker assessments live in DESCRIPTION, not SYMBOL codes like TD3C.
+ALTER SESSION SET QUERY_TAG = 'freight-agent:discovery-value-probes';
+
+-- Platts: dirty/clean tanker assessments (sample)
+SELECT SYMBOL, DESCRIPTION, COMMODITY, VESSEL_CLASS, UOM, QUOTATION_STYLE, MDC
+FROM SPGICI_MARKETDATA_SHARE.MDV2.REF_DATA_MARKETDATA
+WHERE DESCRIPTION ILIKE '%Dirty Tanker%'
+   OR DESCRIPTION ILIKE '%Clean Tanker%'
+   OR (DESCRIPTION ILIKE '%Dirty%' AND DESCRIPTION ILIKE '%Wsc%')
+LIMIT 100;
+
+-- Platts: bunker / VLSFO (sample)
+SELECT SYMBOL, DESCRIPTION, COMMODITY, DELIVERY_REGION, UOM
+FROM SPGICI_MARKETDATA_SHARE.MDV2.REF_DATA_MARKETDATA
+WHERE DESCRIPTION ILIKE '%VLSFO%'
+   OR DESCRIPTION ILIKE '%Bunker FO%'
+LIMIT 100;
+
+-- ICE wet freight FFAs (distinct product roots from LONG_NAME)
+SELECT LONG_NAME, COUNT(*) AS n
+FROM ICE.MFT.FUTURES
+WHERE LONG_NAME ILIKE '%FFA%'
+  AND (LONG_NAME ILIKE '%TD3%' OR LONG_NAME ILIKE '%TC14%' OR LONG_NAME ILIKE '%Wet Freight%')
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 100;

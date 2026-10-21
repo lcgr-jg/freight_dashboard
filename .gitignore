@@ -1,0 +1,7 @@
+.env
+__pycache__/
+.ipynb_checkpoints/
+*.parquet
+data/
+sql/discovery/_runs/
+apps/tonnage_supply/.cache/

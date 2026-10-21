@@ -1,0 +1,17 @@
+---
+description: Rules for querying Snowflake safely and cheaply during discovery and analysis
+globs: **/*.sql, **/*snowflake*.py, sql/**, notebooks/**
+alwaysApply: false
+---
+# Snowflake querying
+
+- Read-only outside `SNOWFLAKE_SANDBOX_SCHEMA`. If a task seems to need a write elsewhere, stop and ask.
+- Start with metadata, not data: `SHOW DATABASES/SCHEMAS`, `INFORMATION_SCHEMA.TABLES`,
+  `INFORMATION_SCHEMA.COLUMNS` (with ROW_COUNT, BYTES, LAST_ALTERED).
+- Search metadata by keyword with `ILIKE` across table names, column names and comments.
+- Profile tables with aggregates first: row count, min/max date, distinct keys, null rates.
+- Sample with `LIMIT 20` or `SAMPLE (1000 ROWS)`. Never `SELECT *` without LIMIT on tables over ~1M rows.
+- Always filter large time-series tables by date when exploring.
+- Tag sessions: `ALTER SESSION SET QUERY_TAG = 'freight-agent:<task>'`.
+- Save every useful discovery query under `sql/discovery/` with a one-line comment saying what it found.
+- Record verified facts (grain, keys, units, coverage, refresh time) in `docs/04_data_catalog.md`.

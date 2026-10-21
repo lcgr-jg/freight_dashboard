@@ -1,0 +1,27 @@
+# Thin NOC / national-fleet owner aliases for tonnage-supply flags.
+# Match is case-insensitive substring against Kpler Owners_names / shuttle OWNER.
+noc_owners:
+  - ADNOC
+  - KOTC
+  - BAHRI
+  - NITC
+  - NSCSA
+  - Saudi Aramco
+  - Kuwait Oil Tanker
+  - Qatar Shipping
+  - Qatar Gas Transport
+  - Nakilat
+  - Oman Shipping
+  - Petrobras
+  - SONANGOL
+  - NNPC
+  - PDVSA
+  - Sovcomflot
+  - SCF
+  - China COSCO
+  - COSCO Shipping Energy
+  - China Merchants Energy
+  - PetroChina
+  - INEOS
+  - Equinor
+  - Petronas

@@ -1,0 +1,32 @@
+-- Phase 0 step 3: ICE wet freight FFA inventory (see docs/ice_ffa_map.md).
+-- Prefer run_step3_ice_ffas.py / run_step3_ice_followup.py (parameterised, tagged).
+ALTER SESSION SET QUERY_TAG = 'freight-agent:discovery-ice-ffas';
+
+-- Product inventory (misses TDC — name has no 'FFA')
+SELECT
+  REGEXP_SUBSTR(LONG_NAME, '^[A-Z0-9]+') AS PRODUCT_CODE,
+  LONG_NAME,
+  MIN(TRADE_DATE) AS FIRST_TRADE_DATE,
+  MAX(TRADE_DATE) AS LAST_TRADE_DATE,
+  COUNT(*) AS N_ROWS,
+  MIN(SETTLEMENT_PRICE) AS MIN_SETTLE,
+  MAX(SETTLEMENT_PRICE) AS MAX_SETTLE
+FROM ICE.MFT.FUTURES
+WHERE LONG_NAME ILIKE '%FFA%'
+  AND (LONG_NAME ILIKE '%(Baltic)%' OR LONG_NAME ILIKE '%(Platts)%' OR LONG_NAME ILIKE '%Wet Freight%')
+GROUP BY 1, 2
+ORDER BY 1, 5 DESC;
+
+-- TD20 monthly (TDC) is the FFA-filter miss
+SELECT REGEXP_SUBSTR(LONG_NAME, '^[A-Z0-9]+') AS PRODUCT_CODE, LONG_NAME,
+       MIN(TRADE_DATE), MAX(TRADE_DATE), COUNT(*)
+FROM ICE.MFT.FUTURES
+WHERE LONG_NAME ILIKE '%TD20%'
+GROUP BY 1, 2;
+
+-- Front-month sanity (Early print)
+SELECT TRADE_DATE, STRIP, FILE_FLAG, SETTLEMENT_PRICE, TOTAL_VOLUME, OPEN_INTEREST
+FROM ICE.MFT.FUTURES
+WHERE REGEXP_SUBSTR(LONG_NAME, '^[A-Z0-9]+') = 'TDL'
+  AND TRADE_DATE = '2026-10-05'
+  AND STRIP IN ('Oct26','Nov26','Dec26','Jan27');

@@ -1,0 +1,17 @@
+---
+description: Protocol for discovering and assessing data sources in Snowflake and elsewhere. Apply when asked to find, assess or catalog data.
+alwaysApply: false
+---
+# Data discovery protocol
+
+Follow `docs/05_discovery_plan.md`. For each candidate dataset record in `docs/04_data_catalog.md`:
+location, grain, primary keys, date coverage, refresh cadence/latency, units, sample values,
+quality issues, joins to other sources, and a **usefulness rating (0–3)** for each project
+workstream with one line of reasoning.
+
+Rules:
+- Evidence over assumption: every catalog entry cites the query that verified it (file in `sql/discovery/`).
+- Separate "verified" from "suspected". Unverified items go in `docs/07_open_questions.md`.
+- Stop after each discovery phase and summarise findings for human review before building on them.
+- Look for overlaps: the same quantity from two sources (e.g. Baltic prints from a vendor feed vs the
+  Clarksons parser) is valuable for validation; note which should be primary.
